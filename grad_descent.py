@@ -69,6 +69,30 @@ def gradDescent(x, y, m, num_iters=1500, alpha=0.0001):
             print 'diverged! try using smaller alpha'
     return w, E_history
 
+
+def gradDescentNewton(x, y, m, num_iters=1500):
+    n = y.size
+    X = createX(x, m)  # create X
+    y = np.mat(y)
+    y = y.T  # prepare y
+    w = np.mat(np.zeros(shape=(m+1, 1)))
+    E_history = np.zeros(shape=(num_iters, 1))
+    prevE = float("inf")
+    for i in range(num_iters):
+        E = computeCost(X, y, w)
+        if E < prevE:
+            predictions = X * w
+            diff = predictions - y
+            for j in range(m+1):
+                error = diff.T * X[:, j]
+                XTX = X[:,j].T * X[:,j]
+                w[j][0] -= (1.0 / n) * error.sum() * XTX.I
+            E_history[i, 0] = E  # computeCost(X, y, w)
+            prevE = E
+        else:
+            print 'diverged! try using smaller alpha'
+    return w, E_history
+
 def stocGradDescent(x, y, m, num_iters=1500, alpha=0.0001):
     n = y.size
     X = createX(x, m)  # create X
@@ -202,7 +226,7 @@ def conjugateGrad(x, y, m, num_iters=1500, threshold=0):
         # print RMSE
         E_history[i, 0] = RMSE # store error
         if RMSE <= threshold: # if error is tolerable
-            break
+            break # quit iteration
         beta = np.asscalar(r.T * r / rtr_old) # beta must be a scalar
         p = r + (beta * p)
         i += 1
@@ -210,7 +234,23 @@ def conjugateGrad(x, y, m, num_iters=1500, threshold=0):
     return w, E_history
 
 
-def simAnnealing():
+def simAnnealing(x, y, m, num_iters=1500, threshold=0):
+    n = y.size
+    X = createX(x, m)
+    y = np.mat(y)
+    y = y.T # prepare y.T
+    w = np.mat(np.zeros(shape=(m+1, 1)))
+    E_history = np.zeros(shape=(num_iters, 1))
+    # Algorithm start
+    s = rnd.randint(0, n-1) # randomize initial state
+    e = computeCost(X[s], y[s], w) # Energy of state
+    sbest = s
+    ebest = e
+    i = 0
+    while i < num_iters and e > threshold:
+        temp = i/num_iters
+        # select neighborhood next to current state (s+1)
+    # Algorithm end
     return
 
 

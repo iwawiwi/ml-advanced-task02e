@@ -75,6 +75,33 @@ def gradDescentMulti(x1, x2, y, m, num_iters=1500, alpha=0.0001):
     return X, w, E_history
 
 
+def newtonMulti(x1, x2, y, m, num_iters=1500):
+    x1 = np.mat(x1).flatten().T
+    x2 = np.mat(x2).flatten().T
+    X = createMultiX(x1, x2, m)
+    y = np.mat(y).flatten().T
+    n = y.size
+    w = np.mat(np.zeros(shape=(m+1, 1)))
+    E_history = np.zeros(shape=(num_iters, 1))
+    prevE = float("inf")
+    for i in range(num_iters):
+        E = computeCost(X, y, w)
+        if E < prevE:
+            predictions = X * w
+            diff = predictions - y
+            for j in range(m+1):
+                error = diff.T * X[:, j]
+                XTX = X[:,j].T * X[:,j]
+                w[j][0] -= (1.0 / n) * error.sum() * XTX.I
+            E_history[i, 0] = E  # computeCost(X, y, w)
+            prevE = E
+        else:
+            print 'diverged! try using smaller alpha'
+            sys.exit(1)
+    return X, w, E_history
+
+
+
 def stocGradDescentMulti(x1, x2, y, m, num_iters=1500, alpha=0.0001):
     x1 = np.mat(x1).flatten().T
     x2 = np.mat(x2).flatten().T
