@@ -30,7 +30,7 @@ y_stand_approx = np.reshape(y_stand_approx, (len(x1_sample), -1))
 t1 = time()
 
 # gradient descent methods
-n_gdm_iter = 100000
+n_gdm_iter = 10
 gdm_alpha = 0.000000000000000001
 sample_size = 10
 
@@ -58,10 +58,18 @@ y_sgdm2_approx = X * w_stand
 y_sgdm2_approx = np.reshape(y_sgdm2_approx, (len(x1_sample), -1))
 t4 = time()
 
+# conjugate gradient
+X, w_cg, J_cg_history = gdm.conjugateGrad(x1_sample, x2_sample, y_sample, order, n_gdm_iter)
+print 'w_cg: ', w_cg
+y_cg_approx = X * w_stand
+y_cg_approx = np.reshape(y_cg_approx, (len(x1_sample), -1))
+t5 = time()
+
 ct_normal_eq = t1 - t0
 ct_grad_desc = t2 - t1
 ct_stoc_grad_desc = t3 - t2
 ct_stoc_grad_desc2 = t4 - t3
+ct_cg = t5 - t4
 
 
 # plot
@@ -122,6 +130,15 @@ ax.set_ylabel('x2')
 plt.title('SGD2 Polynomial Approx.: '+str(n_gdm_iter)+' iterations, alpha = '+str(gdm_alpha))
 # plt.show()
 
+# plot CG result
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.plot_surface(x1_sample, x2_sample, y_cg_approx, cmap=cm.hot, alpha=0.3)
+ax.set_zlim(-2.5, 2.5)
+ax.set_xlabel('x1')
+ax.set_ylabel('x2')
+plt.title('CG Polynomial Approx.: '+str(n_gdm_iter)+' iterations')
+
 # plot GD error profile
 n_iter = len(J_gdm_history)
 x_error = np.arange(n_iter)
@@ -166,6 +183,20 @@ plt.title('SGDM2 Error Profile with M = ' + str(order) + ', N = ' + str(len(y_sg
 plt.legend()
 plt.grid()
 # plt.show()
+
+# plot CG error profile
+n_iter = len(J_cg_history)
+x_error = np.arange(n_iter)
+J_error = [J_stand] * n_iter
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.plot(x_error, J_error, 'r--', linewidth=2, label='Stand')
+ax.plot(x_error, J_cg_history, 'g--', linewidth=0.5, label='CG')
+plt.xlabel('Error Profile')
+plt.ylabel('Iteration')
+plt.title('CG Error Profile with M = ' + str(order) + ', N = ' + str(len(y_cg_approx)))
+plt.legend()
+plt.grid()
 
 
 # plot computation time comparison

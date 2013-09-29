@@ -14,7 +14,7 @@ y_sample = np.sin(x_sample) + noise
 
 import grad_descent as reg
 order = 3
-n_gd_iter = 150
+n_gd_iter = 15
 gd_alpha = 0.0001
 sgd2_sample_size = 3
 t0 = time()
@@ -29,16 +29,23 @@ t3 = time()
 w_sgd2, J_sgd2_history = reg.stocGradDescent2(x_sample, y_sample, order, n_gd_iter, gd_alpha, sgd2_sample_size)
 print 'SGD2 finished'
 t4 = time()
+w_cg, J_cg_history = reg.conjugateGrad(x_sample, y_sample, order, n_gd_iter)
+print 'CG finished'
+t5 = time()
+
+
 ct_normal_eq = t1 - t0
 ct_grad_desc = t2 - t1
 ct_stoc_grad_desc = t3 - t2
 ct_stoc_grad_desc2 = t4 - t3
+ct_cg = t5 - t4
 
 # create model for drawing
 y_model_stand = reg.createModel(x, w_stand)
 y_model_gd = reg.createModel(x, w_gd)
 y_model_sgd = reg.createModel(x, w_sgd)
 y_model_sgd2 = reg.createModel(x, w_sgd2)
+y_model_cg = reg.createModel(x, w_cg)
 
 # plot
 import matplotlib.pyplot as plt
@@ -52,6 +59,7 @@ ax.plot(x, y_model_stand, 'r--', linewidth=2, label='Standard')
 ax.plot(x, y_model_gd, 'g--', linewidth=2, label='GD')
 ax.plot(x, y_model_sgd, 'm--', linewidth=2, label='SGD')
 ax.plot(x, y_model_sgd2, 'c--', linewidth=2, label='SGD2')
+ax.plot(x, y_model_cg, 'y--', linewidth=2, label='CG')
 plt.xlabel('X')
 plt.ylabel('y')
 plt.title('Regression with M = ' + str(order) + ', N = ' + str(len(x_sample)))
@@ -103,6 +111,20 @@ plt.title('SGD2 Error Profile with M = ' + str(order) + ', N = ' + str(len(x_sam
 plt.legend()
 plt.grid()
 # plt.show()
+
+# plot CG error profile
+n_iter = len(J_cg_history)
+x_error = np.arange(n_iter)
+J_error = [J_stand] * n_iter
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.plot(x_error, J_error, 'r--', linewidth=2, label='Stand')
+ax.plot(x_error, J_cg_history, 'g--', linewidth=2, label='CG')
+plt.xlabel('Error Profile')
+plt.ylabel('Iteration')
+plt.title('CG Error Profile with M = ' + str(order) + ', N = ' + str(len(x_sample)))
+plt.legend()
+plt.grid()
 
 # plot computation time comparison
 fig = plt.figure()
