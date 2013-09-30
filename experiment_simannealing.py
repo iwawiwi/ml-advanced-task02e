@@ -14,7 +14,7 @@ y_sample = np.sin(x_sample) + noise
 
 import grad_descent as reg
 order = 3
-n_gd_iter = 50
+n_gd_iter = 1500000
 gd_alpha = 0.0001
 sgd2_sample_size = 3
 
@@ -22,9 +22,21 @@ t0 = time()
 w_anneal, J_anneal = reg.simulatedAnneal(x_sample, y_sample, order, num_iters=n_gd_iter)
 print 'Annealing finished'
 t1 = time()
+w_gd, J_gd = reg.gradDescent(x_sample, y_sample, order, num_iters=n_gd_iter, alpha=gd_alpha)
+print 'GD finished'
+t2 = time()
+w_newton, J_newton = reg.gradDescentNewton(x_sample, y_sample, order, num_iters=n_gd_iter)
+print 'Newton finished'
+t3 = time()
+
+
 
 ct_anneal = t1 - t0
 y_model_anneal = reg.createModel(x, w_anneal)
+ct_gd = t2 - t1
+y_model_gd = reg.createModel(x, w_gd)
+ct_newton = t2 - t1
+y_model_newton = reg.createModel(x, w_newton)
 
 
 # plot
@@ -39,10 +51,44 @@ ax = fig.add_subplot(111)
 ax.plot(x, y_true, 'g-', linewidth=2, label='True')
 ax.scatter(x_sample, y_sample, s=50, facecolors='none', edgecolors='b', linewidths=0.5, label='Data')
 ax.plot(x, y_model_anneal, 'r--', linewidth=2, label='Anneal')
+ax.plot(x, y_model_gd, 'g--', linewidth=2, label='GD')
+ax.plot(x, y_model_newton, 'y--', linewidth=2, label='Newton')
 plt.xlabel('X')
 plt.ylabel('y')
 plt.title('Regression with M = ' + str(order) + ', N = ' + str(len(x_sample)))
 plt.legend()
+plt.grid()
+
+# plot GD error profile
+n_iter = len(J_gd)
+x_error = np.arange(n_iter)
+fig = plt.figure(title + 'GD Error Profile')
+ax = fig.add_subplot(111)
+ax.plot(x_error, J_anneal, 'r--', linewidth=2, label='Anneal')
+ax.plot(x_error, J_gd, 'g--', linewidth=2, label='GD')
+ax.plot(x_error, J_newton, 'y--', linewidth=2, label='Newton')
+# ax.plot(x_error, J_cg_history, 'y--', linewidth=2, label='CG')
+plt.ylabel('Error Profile')
+plt.xlabel('Iteration')
+plt.title('Error Profile with M = ' + str(order) + ', N = ' + str(len(x_sample)))
+plt.legend()
+plt.grid()
+
+# plot computation time comparison in LOGARITHMIC
+fig = plt.figure(title + 'Computation Time (LOG)')
+ax = fig.add_subplot(111)
+cts = [np.log(ct_anneal), np.log(ct_gd), np.log(ct_newton)]
+b = [0.15, 0.35, 0.55]
+plt.xlim(0.0, 0.8)
+tick_offset = [0.05] * 3
+xticks = [x + y for x, y in zip(b, tick_offset)]
+ax.set_xticks(xticks)
+ax.set_xticklabels(('Anneal', 'GD', 'Newton'))
+ax.bar(b, cts, width=0.1, color='r')
+ax.set_yscale('symlog', linthreshy=1)
+plt.xlabel('Methods')
+plt.ylabel('Time (s)')
+plt.title('Computation Time of Annealing,GD,Newton with Iter = ' + str(n_gd_iter))
 plt.grid()
 plt.show()
 
