@@ -234,12 +234,40 @@ def conjugateGrad(x, y, m, num_iters=1500, threshold=0):
     return w, E_history
 
 
-def simAnnealing(x, y, m, num_iters=1500, threshold=0):
+def simulatedAnneal(x, y, m, num_iters=1500):
     n = y.size
-    X = createX(x, m)
+    X = createX(x, m)  # create X
     y = np.mat(y)
-    y = y.T # prepare y.T
+    y = y.T  # prepare y
     w = np.mat(np.zeros(shape=(m+1, 1)))
+
+    w, E_history = annealingSchedule(X, y, w, num_iters=num_iters) # compute error based on annealing schedule
+
+    # update w
+    # predictions = X * w # best prediction
+    # diff = predictions - y
+    # for j in range(np.size(w,0)):
+    #     error = diff.T * X[:, j]
+    #     print 'error', error.sum()
+    #     w[j][0] -= (1.0 / n) * error.sum()
+
+    # sbest, E_history = annealingSchedule(X, y, w, num_iters=num_iters) # compute error based on annealing schedule
+    # predictions = X[sbest] * w # best prediction
+    # diff = predictions - y
+    # for j in range(m+1):
+    #     error = diff.T * X[:, j]
+    #     w[j][0] -= (1.0 / n) * error.sum()
+
+    print 'w: ', w, 'E:', E_history
+    return w, E_history
+
+
+def annealingSchedule(X, y, w, num_iters=1500, threshold=0, anneal_param=0.95, max_temp=150):
+    n = y.size
+    # X = createX(x, m)
+    # y = np.mat(y)
+    # y = y.T # prepare y.T
+    # w = np.mat(np.zeros(shape=(m+1, 1)))
     E_history = np.zeros(shape=(num_iters, 1))
     # Algorithm start
     s = rnd.randint(0, n-1) # randomize initial state
@@ -247,11 +275,38 @@ def simAnnealing(x, y, m, num_iters=1500, threshold=0):
     sbest = s
     ebest = e
     i = 0
-    while i < num_iters and e > threshold:
-        temp = i/num_iters
-        # select neighborhood next to current state (s+1)
+    while i < num_iters and e > threshold and e != float('inf'):
+        temp = max_temp * pow(anneal_param, i) # calculate temprature -- default MATLAB
+        snew = rnd.randint(0, n-1) # select neighborhood randomly
+        enew = computeCost(X[snew], y[snew], w)
+
+        # print 'enew = ' + str(enew) + ', e = ' + str(e) + ', temp = ' + str(temp)
+        # Acceptace of move function
+        if enew == float('inf'):
+            break # break loop if energy too high or inifinite
+
+        accept_prob = np.float(1/(1 + (np.exp(enew - e)/temp))) # default MATLAB
+
+        if np.random.random_sample() < accept_prob:
+            s = snew
+            e = enew
+
+            # update w
+            predictions = X * w # best prediction
+            diff = predictions - y
+            print 'diff', diff
+            for j in range(np.size(w,0)):
+                error = diff.T * X[:, j]
+                print 'error', error.sum()
+                w[j][0] -= (1.0 / n) * error.sum()
+
+        if enew < ebest:
+            sbest = snew
+            ebest = enew
+        E_history[i, 0] = e
+        i += 1
     # Algorithm end
-    return
+    return w, E_history # return minimum error found
 
 
 def createModel(x, w):
